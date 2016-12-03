@@ -65,7 +65,7 @@ int main()
         T[j][N] = 0;
     }
 
-    for (int l=0; l<10000; l++)
+    for (int l=0; l<500; l++)
     {
         //for (int i=0; i<N+1; i++)
         for (int i=1; i<N; i++)
