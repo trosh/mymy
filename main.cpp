@@ -1,17 +1,37 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
-// ici je vais refaire le projectmymy file
-// mais avec un signe moins devant le calcul
+class Mat : public vector<double>
+{
+  public:
+    const int nrows, ncols;
+    Mat(int nrows, int ncols)
+    : nrows(nrows), ncols(ncols)
+    , vector<double>(nrows * ncols)
+    { }
+    Mat(int nrows, int ncols, double initval)
+    : nrows(nrows), ncols(ncols)
+    , vector<double>(nrows * ncols, initval)
+    { }
+    double & operator()(int i, int j)
+    {
+        return operator[](i * ncols + j);
+    }
+    double operator()(int i, int j) const
+    {
+        return operator[](i * ncols + j);
+    }
+};
+
+// ici je vais refaire le projectmymy file mais avec un signe moins devant le calcul
 int main()
 {
-    const int N = 27, M = 500;
+    const int N = 42, M = 500;
     // PLus on augmente Cv plus le transfèrt thermique est difficile
-    double Cv = 24;
+    double Cv = 45;
     const double Tfin = 0.5 * M / (N * N);
     const double dx = 1.0 / N;
     const double dy = 1.0 / N;
@@ -36,15 +56,16 @@ int main()
 
     // Initialisation :
 
-    //double T[N+1][N+1], T0[N+1][N+1];
-    vector<vector<double> > T (N+1, vector<double>(N+1, 200.0));
-    vector<vector<double> > T0(N+1, vector<double>(N+1, 200.0));
+    Mat T (N+1, N+1, 0.0);
+    Mat T0(N+1, N+1, 0.0);
+    //vector<vector<double> > T (N+1, vector<double>(N+1, 0.0));
+    //vector<vector<double> > T0(N+1, vector<double>(N+1, 0.0));
 
     for (int i=N/3; i<2*N/3; i++)
     for (int j=N/3; j<2*N/3; j++)
     {
         // condition initiale centrale (zone centrale plus chaude mais elle peut varier)
-        T[i][j] = 500;
+        T(i, j) = 3;
     }
 
     // Calcul de T
@@ -59,10 +80,10 @@ int main()
 
     for (int j=0; j<N+1; j++)
     {
-        T[0][j] = 0;
-        T[j][0] = 0;
-        T[N][j] = 0;
-        T[j][N] = 0;
+        T(0, j) = 0.0;
+        T(j, 0) = 0.0;
+        T(N, j) = 0.0;
+        T(j, N) = 0.0;
     }
 
     for (int l=0; l<10000; l++)
@@ -72,36 +93,32 @@ int main()
         {
             for (int j=1; j<N; j++)
             {
-                if (T[i][j] > Td)
+                if (T(i, j) > Td)
                 {
                     Cv = 24;
-                    // pour sortir de dlg il faut que T > 215
-                }
+                } // pour sortir de dlg il faut que >i 215
                 else
                 {
-                    Cv = T[i][j];
-                }
+                    Cv = T(i, j);
+                } // avant cetait 24
 
                 const float hihi =
-                    -C * (T[i+1][j  ]
-                        - T[i  ][j  ] * 4
-                        + T[i-1][j  ]
-                        + T[i  ][j+1]
-                        + T[i  ][j-1]);
+                    -C * (T(i+1, j  )
+                        - T(i  , j  ) * 4
+                        + T(i-1, j  )
+                        + T(i  , j+1)
+                        + T(i  , j-1));
 
-                // T -> T0
-                T0[i][j] = T[i][j] - dt * hihi / (Cv*dx*dx);
+                T(i, j) += -dt*hihi / (Cv*dx*dx);
 
                 mymy << l*dt << " "
                      << x[i] << " "
                      << y[j] << " "
-                     << T0[i][j] << endl;
+                     << T(i, j) << endl;
             }
             mymy << endl ;
         }
         mymy << endl ;
-        // T0 -> T
-        copy(T0.begin(), T0.end(), T.begin());
     }
 
     //set term post
