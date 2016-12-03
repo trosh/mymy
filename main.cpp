@@ -1,15 +1,17 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
-// ici je vais refaire le projectmymy file mais avec un signe moins devant le calcul
+// ici je vais refaire le projectmymy file
+// mais avec un signe moins devant le calcul
 int main()
 {
-    const int N = 42, M = 500;
+    const int N = 27, M = 500;
     // PLus on augmente Cv plus le transfèrt thermique est difficile
-    double Cv = 45;
+    double Cv = 24;
     const double Tfin = 0.5 * M / (N * N);
     const double dx = 1.0 / N;
     const double dy = 1.0 / N;
@@ -26,7 +28,7 @@ int main()
     // Check de : condition de stabilité
     if (dt > 0.5 * dx * dx)
     {
-        cout << "bad dt" << endl;
+        cerr << "bad dt" << endl;
         return 1;
     }
 
@@ -35,14 +37,14 @@ int main()
     // Initialisation :
 
     //double T[N+1][N+1], T0[N+1][N+1];
-    vector<vector<double> > T (N+1, vector<double>(N+1, 0.0));
-    vector<vector<double> > T0(N+1, vector<double>(N+1, 0.0));
+    vector<vector<double> > T (N+1, vector<double>(N+1, 200.0));
+    vector<vector<double> > T0(N+1, vector<double>(N+1, 200.0));
 
     for (int i=N/3; i<2*N/3; i++)
     for (int j=N/3; j<2*N/3; j++)
     {
         // condition initiale centrale (zone centrale plus chaude mais elle peut varier)
-        T[i][j] = 3;
+        T[i][j] = 500;
     }
 
     // Calcul de T
@@ -73,11 +75,12 @@ int main()
                 if (T[i][j] > Td)
                 {
                     Cv = 24;
-                } // pour sortir de dlg il faut que >i 215
+                    // pour sortir de dlg il faut que T > 215
+                }
                 else
                 {
                     Cv = T[i][j];
-                } // avant cetait 24
+                }
 
                 const float hihi =
                     -C * (T[i+1][j  ]
@@ -86,16 +89,19 @@ int main()
                         + T[i  ][j+1]
                         + T[i  ][j-1]);
 
-                T[i][j] += -dt*hihi / (Cv*dx*dx);
+                // T -> T0
+                T0[i][j] = T[i][j] - dt * hihi / (Cv*dx*dx);
 
                 mymy << l*dt << " "
                      << x[i] << " "
                      << y[j] << " "
-                     << T[i][j] << endl;
+                     << T0[i][j] << endl;
             }
             mymy << endl ;
         }
         mymy << endl ;
+        // T0 -> T
+        copy(T0.begin(), T0.end(), T.begin());
     }
 
     //set term post
@@ -106,3 +112,4 @@ int main()
     return 0;
 
 }
+
