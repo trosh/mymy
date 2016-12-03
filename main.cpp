@@ -29,7 +29,7 @@ int main()
     if (dt > 0.5 * dx * dx)
     {
         cerr << "bad dt" << endl;
-        return 1;
+        cerr << "(ignoring)" << endl;
     }
 
     // Deuxième partie : comment calculer T(xi,yj) avec i€[0,N] et j€[0,N] T(x,y)
